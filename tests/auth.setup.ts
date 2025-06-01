@@ -1,25 +1,12 @@
-import { test as setup } from "@playwright/test";
-import login from "../auth/login.json";
-import fs from "fs";
+import { expect, test as setup } from "@playwright/test";
 
-setup("Authentication", async ({ request }) => {
-  const response = await request.post(
-    "https://conduit-api.bondaracademy.com/api/users/login",
-    {
-      data: {
-        user: {
-          email: "m_copy@abv.bg",
-          password: "test1234",
-        },
-      },
-    }
-  );
-  const responseBody = await response.json();
-  const token = responseBody.user.token;
+setup("Authentication", async ({ page }) => {
+  await page.goto("https://conduit.bondaracademy.com/");
+  await page.getByText("Sign in").click();
+  await page.getByRole("textbox", { name: "Email" }).fill("m_copy@abv.bg");
+  await page.getByRole("textbox", { name: "Password" }).fill("test1234");
+  await page.getByRole("button").click();
+  await expect(page.getByText("chill")).toBeVisible();
 
-  login.origins[0].localStorage[0].value = token;
-
-  fs.writeFileSync("./auth/login.json", JSON.stringify(login));
-
-  process.env["ACCESS_TOKEN"] = token;
+  await page.context().storageState({ path: "../auth/login.json" });
 });
